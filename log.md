@@ -46,6 +46,9 @@ Starting "free" now.
 I need to add a "magic number" to each header, so that i can find if a pointer was malloc'ed 
 or created in the stack. I should only free pointers that were malloc'ed
 
+BOOM. Added colescing (whatever its called). 
+
 ### Decision
 Switching to a doubly linked list, for better coalesing
 Can switch to a footer for free blocks later
+
