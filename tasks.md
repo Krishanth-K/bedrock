@@ -1,48 +1,67 @@
-**CORE (Must have or it's not an allocator):**
+## MEMORY ALLOCATOR - REMAINING TASKS
 
-1. **malloc(size_t size)** - Allocate `size` bytes, return pointer or NULL on failure
-2. **free(void *ptr)** - Deallocate memory at `ptr`
-3. **Memory management strategy** - How do you track free vs allocated blocks? Pick one:
-   - Free list (linked list of free blocks)
-   - Segregated free lists (different lists for different sizes)
-   - Bitmap
-   - Buddy system
-4. **Coalescing** - When you free a block, merge adjacent free blocks or you'll fragment memory to death
-5. **Splitting** - When allocating from a large free block, split it and return the leftover to free pool
-6. **Alignment** - All returned pointers must be properly aligned (usually 8 or 16 bytes). Unaligned pointers = crashes on many architectures
-7. **Metadata storage** - Store block size and allocation status. Where? Header before each block? Separate structure?
+### **Phase 1: Core Fixes (Critical)**
+- [ ] Add alignment macro definitions (`ALIGN`, `ALIGN_UP`)
+- [ ] Implement alignment in `_malloc` (round up allocation sizes)
+- [ ] Test alignment with unaligned requests (e.g., 5 bytes)
+- [ ] Verify all returned pointers are 8-byte aligned
 
-**STANDARD (Expected in real allocators):**
+### **Phase 2: Standard Library Functions**
+- [ ] Implement `_calloc(size_t nmemb, size_t size)`
+  - [ ] Add overflow check
+  - [ ] Allocate memory using `_malloc`
+  - [ ] Zero-initialize with `memset`
+  - [ ] Test with array allocation
 
-8. **calloc(size_t nmemb, size_t size)** - Allocate and zero initialize. Must check for overflow: `nmemb * size`
-9. **realloc(void *ptr, size_t size)** - Resize allocation. Can you expand in place? Otherwise malloc+copy+free
-10. **Error handling** - Return NULL on failure, set errno appropriately
+- [ ] Implement `_realloc(void *ptr, size_t new_size)`
+  - [ ] Handle NULL pointer (redirect to malloc)
+  - [ ] Handle zero size (free and return NULL)
+  - [ ] Validate pointer with magic number
+  - [ ] Check if current block is large enough
+  - [ ] If not, allocate new block, copy data, free old
+  - [ ] Test growing and shrinking allocations
 
-**PERFORMANCE (Separates garbage from production-grade):**
+### **Phase 3: Multi-Page Support**
+- [ ] Implement `expand_heap()` function
+  - [ ] Request new page via `mmap`
+  - [ ] Initialize new block header
+  - [ ] Find last block in current heap
+  - [ ] Link new page to existing heap
+  - [ ] Update prev/next pointers
+- [ ] Modify `_malloc` to call `expand_heap()` when out of memory
+- [ ] Test allocating more than 4KB total
+- [ ] Verify multiple pages are linked correctly
 
-11. **Size classes** - Small allocations (< 512 bytes) should be FAST. Use segregated lists or bins
-12. **Large allocation optimization** - Big requests (> page size) should use `mmap` directly, not your heap
-13. **Thread safety** - Mutexes or per-thread arenas. Single-threaded allocators are toys
-14. **Minimize syscalls** - Request big chunks from OS, subdivide them yourself. Don't call `mmap` for every malloc
+### **Phase 4: Testing & Validation**
+- [ ] Create comprehensive test suite
+  - [ ] Test alignment edge cases
+  - [ ] Test calloc zeros memory correctly
+  - [ ] Test realloc preserves data
+  - [ ] Test multi-page allocation
+  - [ ] Test allocating hundreds of small blocks
+  - [ ] Test fragmenting and coalescing repeatedly
+- [ ] Add heap consistency checker (walk list, verify all pointers)
+- [ ] Test buffer overflow detection (if you add red zones)
 
-**CORRECTNESS (Or you'll spend days debugging crashes):**
+### **Phase 5: Documentation & Cleanup**
+- [ ] Remove all TODO comments
+- [ ] Add function documentation comments
+- [ ] Clean up debug print statements
+- [ ] Write README explaining your allocator
+- [ ] Document known limitations
 
-15. **Double-free detection** - freeing the same pointer twice should not corrupt your heap
-16. **Invalid free detection** - freeing random pointers should fail gracefully, not explode
-17. **Boundary tags** - Store metadata at both ends of blocks for easier coalescing
-18. **Canaries/guards** - Detect buffer overflows by putting magic values around blocks
+### **Optional: Advanced Features (If you want to go further)**
+- [ ] Add heap statistics tracking
+  - [ ] Total bytes allocated
+  - [ ] Peak memory usage
+  - [ ] Number of allocations
+  - [ ] Fragmentation metrics
+- [ ] Implement segregated free lists for common sizes
+- [ ] Add thread safety with mutexes
+- [ ] Implement large allocation optimization (direct mmap for >128KB)
+- [ ] Add red zones for buffer overflow detection
+- [ ] Create visualization tool to show heap state
 
-**BONUS (If you want to flex):**
+---
 
-19. **Memory pools** - Pre-allocate for common sizes
-20. **Defragmentation** - Compact memory to reduce fragmentation
-21. **Statistics/debugging** - Track allocations, leaks, fragmentation
-22. **Custom alignment** - Support `aligned_alloc()` or `posix_memalign()`
-
-**START HERE - Minimal viable allocator:**
-1. Request one big chunk via `mmap` (say 1MB)
-2. Implement a simple free list with first-fit
-3. malloc: find free block big enough, mark as used, return pointer
-4. free: mark block as free, add to free list
-5. NO coalescing, NO splitting, fixed size blocks initially
-
+**START WITH PHASE 1, TASK 1.** Add the alignment macros and show me the code.

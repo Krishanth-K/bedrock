@@ -5,6 +5,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#define ALIGNMENT 8
+#define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
+
 // PERF: Now all blocks are in the linked list, not only free ones
 
 struct block_header *free_list = NULL;
@@ -29,7 +32,10 @@ void initHeap()
 	                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if (start == MAP_FAILED)
+	{
 		perror("Map failed");
+		exit(1);
+	}
 
 	struct block_header *header = (struct block_header *)start;
 
@@ -47,6 +53,9 @@ void *_malloc(size_t length)
 {
 	if (!free_list)
 		initHeap();
+
+	// align the length
+	length = ALIGN(length);
 
 	if (free_list->size < length)
 		printf("TODO: Create another page or smthng\n");
