@@ -1,5 +1,5 @@
 BUILD_DIR := build
-TARGET    := $(BUILD_DIR)/hex-dump
+TARGET    := $(BUILD_DIR)/mem_alloc
 
 .PHONY: all configure build run clean rebuild
 

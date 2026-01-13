@@ -1,5 +1,4 @@
 #pragma once
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -13,8 +12,8 @@
 
 // PERF: Now all blocks are in the linked list, not only free ones
 
-const int MIN_HEADER_SIZE = 8;
-const size_t BLOCK_MAGIC = 0xDEADBEEF;
+extern const int MIN_HEADER_SIZE;
+extern const size_t BLOCK_MAGIC;
 
 // header with metadata for the memory block
 typedef struct block_header
@@ -28,7 +27,7 @@ typedef struct block_header
 
 } block_header;
 
-const size_t ALIGNED_BLOCK_SIZE = ALIGN(sizeof(struct block_header));
+extern const size_t ALIGNED_BLOCK_SIZE;
 
 // create a new page and initialize a header and return it
 struct block_header *getHeap();

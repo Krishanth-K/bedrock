@@ -1,13 +1,4 @@
 #include "main.h"
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
-
 #include "test.h"
 
 #define ALIGNMENT 8
@@ -26,7 +17,8 @@ const size_t ALIGNED_BLOCK_SIZE = ALIGN(sizeof(struct block_header));
 // create a new page and initialize a header and return it
 struct block_header *getHeap()
 {
-	void *start = mmap(NULL, getpagesize(), PROT_WRITE | PROT_READ,
+	size_t page_size = sysconf(_SC_PAGESIZE);
+	void *start = mmap(NULL, page_size, PROT_WRITE | PROT_READ,
 	                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 	if (start == MAP_FAILED)
@@ -37,7 +29,7 @@ struct block_header *getHeap()
 
 	struct block_header *header = (struct block_header *)start;
 
-	header->size = getpagesize() - ALIGNED_BLOCK_SIZE;
+	header->size = page_size - ALIGNED_BLOCK_SIZE;
 	header->is_free = true;
 	header->magic = BLOCK_MAGIC;
 
@@ -157,7 +149,6 @@ void *_malloc(size_t length)
 	length = ALIGN(length);
 
 	struct block_header *current = free_list;
-	int iter = 0;
 
 	while (current)
 	{
@@ -313,7 +304,10 @@ void *_realloc(void *ptr, size_t size)
 int main()
 {
 	setvbuf(stdout, NULL, _IONBF, 0);
-	printf("Page size: %d\n", getpagesize());
+
+	size_t page_size = sysconf(_SC_PAGESIZE);
+	printf("Page size: %zu\n", page_size);
+
 	printf("sizeof(block_header) = %zu\n", sizeof(block_header));
 	printf("ALIGNED_BLOCK_SIZE = %zu\n", ALIGNED_BLOCK_SIZE);
 
