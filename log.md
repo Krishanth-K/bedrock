@@ -50,6 +50,11 @@ BOOM. Added colescing (whatever its called).
 
 Added calloc. it was very simple, cause i already have _malloc
 
+`PAIN`
+Ahhhhh spent 2+ trying to debug a segfult. no progress
+the segfault happens when i try to test the realloc. commenting out the *coalesce()* in the
+realloc function seems to solve it. 
+
 ### Progress
 - Implemented free
 - Implemented calloc
@@ -60,3 +65,24 @@ Added calloc. it was very simple, cause i already have _malloc
 Switching to a doubly linked list, for better coalesing
 Can switch to a footer for free blocks later
 
+
+---
+
+## Day 5 - 2026-01-13
+
+Spent almost another hour debugging the segfault
+Works in the online compiler, but not on mine ???
+
+Found a fix
+compiling with ` cc -g -O0 -fsanitize=address -fsanitize=undefined main.c`
+makes it run without issues
+
+Soo compiling with optimisation seems to create undefined behaviour (howww??)
+
+
+FIXED IT!!!
+The issues was my code assumed that new page would be adjacent to the first page.
+But that was wrong
+
+I tried to merge two blocks from non-adjacent pages, leading to UB. The fix was to check
+if the pages are adjacent before trying to colaesce them
