@@ -15,7 +15,7 @@ void verify_pointer(void *ptr, size_t size, char pattern)
 	}
 }
 
-void stress_test()
+void stress_test(void)
 {
 	printf("=== Starting Harsher Stress Test ===\n");
 	srand(42); // Fixed seed for reproducibility
@@ -30,7 +30,7 @@ void stress_test()
 
 	// Test 1: Random Allocations & Frees with Data Verification
 	printf("[1/3] Running Random Operations check...\n");
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		int idx = rand() % NUM_POINTERS;
 

@@ -50,7 +50,7 @@ BOOM. Added colescing (whatever its called).
 
 Added calloc. it was very simple, cause i already have _malloc
 
-`PAIN`
+### Problem
 Ahhhhh spent 2+ trying to debug a segfult. no progress
 the segfault happens when i try to test the expandPage. commenting out the *coalesce()* in the
 realloc function seems to solve it. 
@@ -70,6 +70,7 @@ Can switch to a footer for free blocks later
 
 ## Day 5 - 2026-01-13
 
+### Problem
 Spent almost another hour debugging the segfault
 Works in the online compiler, but not on mine ???
 
@@ -86,6 +87,16 @@ But that was wrong
 
 I tried to merge two blocks from non-adjacent pages, leading to UB. The fix was to check
 if the pages are adjacent before trying to colaesce them
+
+
+### Problem
+New issue
+when i try to allocate 5000 bytes (> a page size), new page is created, but its not adjacent
+so cant coalesce with it, results in a space < 5000 bytes, so create another page and so on ....
+leading to an infinite loop
+
+FIX: create pages adjacent to the current page.
+
 
 
 ### Progress

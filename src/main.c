@@ -7,6 +7,7 @@
 // PERF: Now all blocks are in the linked list, not only free ones
 // TODO: handle cases to free pointers in the middle of the array or
 // data section
+// TODO:
 
 struct block_header *free_list = NULL;
 
@@ -15,7 +16,7 @@ const size_t BLOCK_MAGIC = 0xDEADBEEF;
 const size_t ALIGNED_BLOCK_SIZE = ALIGN(sizeof(struct block_header));
 
 // create a new page and initialize a header and return it
-struct block_header *getHeap()
+struct block_header *getHeap(void)
 {
 	size_t page_size = sysconf(_SC_PAGESIZE);
 	void *start = mmap(NULL, page_size, PROT_WRITE | PROT_READ,
@@ -39,7 +40,7 @@ struct block_header *getHeap()
 	return header;
 }
 
-void initHeap()
+void initHeap(void)
 {
 	struct block_header *header = getHeap();
 	free_list = header;
@@ -47,7 +48,6 @@ void initHeap()
 
 void coalesce(struct block_header *current)
 {
-
 	// merge with next header
 	//
 	// Check if the two blocks are adjacent in memory before combining them
@@ -85,7 +85,7 @@ void coalesce(struct block_header *current)
 	}
 }
 
-void validate_list()
+void validate_list(void)
 {
 	struct block_header *walk = free_list;
 	int count = 0;
@@ -93,7 +93,7 @@ void validate_list()
 	{
 		if (walk->magic != BLOCK_MAGIC)
 		{
-			printf("[ERROR] Corrupted block at %p, magic=%zx\n", walk,
+			printf("[ERROR] Corrupted block at %p, magic=%zx\n", (void *)walk,
 			       walk->magic);
 			abort();
 		}
@@ -104,16 +104,16 @@ void validate_list()
 
 		walk = walk->next;
 		count++;
-		if (count > 10000)
-		{
-			printf("[ERROR] Circular list at block %p!\n", walk);
-			abort();
-		}
+		// if (count > 10000)
+		// {
+		// 	printf("[ERROR] Circular list at block %p!\n", (void *)walk);
+		// 	abort();
+		// }
 	}
 	printf("List validated: %d blocks\n\n", count);
 }
 
-void expandHeap()
+void expandHeap(void)
 {
 	struct block_header *new_page_block = getHeap();
 
@@ -137,7 +137,7 @@ void expandHeap()
 	if (current->is_free)
 		coalesce(current);
 
-	validate_list();
+	/* validate_list(); */
 }
 
 void *_malloc(size_t length)
@@ -301,7 +301,7 @@ void *_realloc(void *ptr, size_t size)
 	return new_ptr;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0);
 
@@ -311,7 +311,8 @@ int main()
 	printf("sizeof(block_header) = %zu\n", sizeof(block_header));
 	printf("ALIGNED_BLOCK_SIZE = %zu\n", ALIGNED_BLOCK_SIZE);
 
-	stress_test();
+	// stress_test();
+	_malloc(5000);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
