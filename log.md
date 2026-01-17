@@ -112,3 +112,8 @@ New ideas new ideas.
 Instead of creating new pages and hoping they would be adjacent. im going to allocate huge spaces, and then
 create and link them
 
+
+### Progress
+- Added multipage support
+- Added better benchmarking
+

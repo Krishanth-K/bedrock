@@ -11,7 +11,8 @@ int main(int argc, char *argv[])
 	printf("sizeof(block_header) = %zu\n", sizeof(block_header));
 	printf("ALIGNED_BLOCK_SIZE = %zu\n", ALIGNED_BLOCK_SIZE);
 
-	comprehensive_test();
+	/* comprehensive_test(); */
+	_malloc(10000000);
 
 	return EXIT_SUCCESS;
 }

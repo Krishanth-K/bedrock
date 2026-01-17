@@ -33,15 +33,29 @@
 - [x] Verify multiple pages are linked correctly
 
 ### **Phase 4: Testing & Validation**
-- [ ] Create comprehensive test suite
-  - [ ] Test alignment edge cases
-  - [ ] Test calloc zeros memory correctly
-  - [ ] Test realloc preserves data
-  - [ ] Test multi-page allocation
-  - [ ] Test allocating hundreds of small blocks
-  - [ ] Test fragmenting and coalescing repeatedly
-- [ ] Add heap consistency checker (walk list, verify all pointers)
-- [ ] Test buffer overflow detection (if you add red zones)
+- [x] Create comprehensive test suite
+  - [x] Test alignment edge cases
+  - [x] Test calloc zeros memory correctly
+  - [x] Test realloc preserves data
+  - [x] Test multi-page allocation
+  - [x] Test allocating hundreds of small blocks
+  - [x] Test fragmenting and coalescing repeatedly
+- [x] Add heap consistency checker (walk list, verify all pointers)
+- [x] Test buffer overflow detection (if you add red zones)
+
+
+- [ ] have another free_list with only freeblocks
+
+
+- [ ] Add actual benchmarks - Compare malloc/free speed against glibc for 10M ops
+- [ ] Measure fragmentation - Track (total_allocated / total_pages) over time
+- [ ] Fix realloc - Actually implement shrinking properly
+- [ ] Add thread safety - Even a single mutex would be better than nothing
+- [ ] Implement size classes - Buckets for 16/32/64/128/256 bytes minimum
+- [ ] Return pages to OS - munmap when large blocks are freed
+- [ ] Write real tests - Memory leak detection, double-free catching, boundary testing
+
+
 
 ### **Phase 5: Documentation & Cleanup**
 - [ ] Remove all TODO comments
@@ -62,6 +76,3 @@
 - [ ] Add red zones for buffer overflow detection
 - [ ] Create visualization tool to show heap state
 
----
-
-**START WITH PHASE 1, TASK 1.** Add the alignment macros and show me the code.

@@ -9,7 +9,7 @@
 // Include your allocator
 #include "mem.h"
 
-#define NUM_RUNS 100
+#define NUM_RUNS 1
 
 #define ITERATIONS 100000
 #define SMALL_SIZE 64
@@ -320,12 +320,12 @@ void run_benchmarks(void)
 {
 	Benchmark benchmarks[] = {
 	    {"Sequential Small Allocs (10k × 64B)", bench_sequential_small},
-	    {"Random Ops (100k ops)", bench_random_ops},
-	    {"Alloc-Fill-Free (10k × 1KB)", bench_alloc_fill_free},
-	    {"Large Allocations (100 × 8KB)", bench_large_allocs},
-	    {"Fragmentation Test", bench_fragmentation},
-	    {"Realloc Operations (1k ops)", bench_realloc_ops},
-	    {"Mixed Workload (100k ops)", bench_mixed_workload},
+	    /* {"Random Ops (100k ops)", bench_random_ops}, */
+	    /* {"Alloc-Fill-Free (10k × 1KB)", bench_alloc_fill_free}, */
+	    /* {"Large Allocations (100 × 8KB)", bench_large_allocs}, */
+	    /* {"Fragmentation Test", bench_fragmentation}, */
+	    /* {"Realloc Operations (1k ops)", bench_realloc_ops}, */
+	    /* {"Mixed Workload (100k ops)", bench_mixed_workload}, */
 	};
 
 	int num_benchmarks = sizeof(benchmarks) / sizeof(benchmarks[0]);

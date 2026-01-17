@@ -24,7 +24,9 @@ typedef struct block_header
 	size_t magic;
 
 	struct block_header *prev;
+	struct block_header *prev_free;
 	struct block_header *next;
+	struct block_header *next_free;
 
 } block_header;
 
@@ -37,6 +39,9 @@ void expandHeap(size_t min_size);
 void coalesce(struct block_header *current);
 
 void validate_list(void);
+
+struct block_header *findNextFreeBlock(struct block_header *current);
+struct block_header *findPrevFreeBlock(struct block_header *current);
 
 void *_malloc(size_t length);
 void _free(void *data);

@@ -1,6 +1,7 @@
 #include "mem.h"
 #include "test.h"
 #include <stddef.h>
+#include <unistd.h>
 
 #define ALIGNMENT 8
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
@@ -8,9 +9,8 @@
 // PERF: Now all blocks are in the linked list, not only free ones
 // TODO: handle cases to free pointers in the middle of the array or
 // data section
-// TODO:
 
-struct block_header *free_list = NULL;
+struct block_header *block_list = NULL;
 
 const int MIN_HEADER_SIZE = 8;
 const size_t BLOCK_MAGIC = 0xDEADBEEF;
@@ -42,7 +42,9 @@ struct block_header *getHeap(size_t size)
 	header->magic = BLOCK_MAGIC;
 
 	header->prev = NULL;
+	header->prev_free = NULL;
 	header->next = NULL;
+	header->next_free = NULL;
 
 	return header;
 }
@@ -51,7 +53,7 @@ void initHeap(void)
 {
 	size_t page_size = sysconf(_SC_PAGESIZE);
 	struct block_header *header = getHeap(page_size);
-	free_list = header;
+	block_list = header;
 }
 
 void coalesce(struct block_header *current)
@@ -71,6 +73,10 @@ void coalesce(struct block_header *current)
 
 		if (next_block->next)
 			next_block->next->prev = current;
+
+		current->next_free = next_block->next_free;
+		if (next_block->next_free)
+			next_block->next_free->prev_free = current;
 	}
 
 	// merge with prev header
@@ -81,13 +87,17 @@ void coalesce(struct block_header *current)
 	    (char *)current->prev + ALIGNED_BLOCK_SIZE + current->prev->size ==
 	        (char *)current)
 	{
-		struct block_header *prev = current->prev;
+		struct block_header *prev_block = current->prev;
 
-		prev->size += current->size + ALIGNED_BLOCK_SIZE;
-		prev->next = current->next;
+		prev_block->size += current->size + ALIGNED_BLOCK_SIZE;
+		prev_block->next = current->next;
 
 		if (current->next)
-			current->next->prev = prev;
+			current->next->prev = prev_block;
+
+		current->prev_free = prev_block->prev_free;
+		if (prev_block->prev_free)
+			prev_block->prev_free->next_free = current;
 
 		// now current points to garbage inside the combined data section
 	}
@@ -95,7 +105,7 @@ void coalesce(struct block_header *current)
 
 void validate_list(void)
 {
-	struct block_header *walk = free_list;
+	struct block_header *walk = block_list;
 	int count = 0;
 	while (walk)
 	{
@@ -124,11 +134,11 @@ void validate_list(void)
 void expandHeap(size_t min_size)
 {
 	// find the last block in the free list
-	struct block_header *current = free_list;
+	struct block_header *current = block_list;
 
-	if (!free_list)
+	if (!block_list)
 	{
-		free_list = getHeap(min_size);
+		block_list = getHeap(min_size);
 		return;
 	}
 
@@ -141,6 +151,14 @@ void expandHeap(size_t min_size)
 	current->next = new_page_block;
 	new_page_block->prev = current;
 
+	// update the next_free of current block
+	current->next_free = new_page_block;
+
+	if (current->is_free)
+		new_page_block->prev_free = current;
+	else
+		new_page_block->prev_free = current->prev_free;
+
 	// coalesce them if possible
 	if (current->is_free)
 		coalesce(current);
@@ -150,25 +168,31 @@ void expandHeap(size_t min_size)
 
 void *_malloc(size_t length)
 {
-	if (!free_list)
+	if (!block_list)
 		initHeap();
 
 	// align the length
 	length = ALIGN(length);
 
-	struct block_header *current = free_list;
+	struct block_header *current = block_list;
 
 	while (current)
 	{
 		// skip if cant allocate in this block
 		if (current->size < length || !current->is_free)
 		{
-			current = current->next;
+			current = current->next_free;
 			continue;
 		}
 
 		// allocate memory
 		current->is_free = false;
+
+		// unlink from teh free list
+		if (current->prev_free)
+			current->prev_free->next_free = current->next_free;
+		if (current->next_free)
+			current->next_free->prev_free = current->prev_free;
 
 		// if there is more space for the next header, place it, or dont
 		size_t remaining = current->size - length;
@@ -190,6 +214,16 @@ void *_malloc(size_t length)
 			new_block->prev = current;
 			if (new_block->next)
 				new_block->next->prev = new_block;
+
+			// update next_free
+			new_block->next_free = current->next_free;
+			if (current->next_free)
+				current->next_free->prev_free = new_block;
+
+			// update prev_free
+			new_block->prev_free = current->prev_free;
+			if (current->prev_free)
+				current->prev_free->next_free = new_block;
 
 			new_block->is_free = true;
 			new_block->magic = BLOCK_MAGIC;
@@ -217,23 +251,33 @@ void _free(void *data)
 	if (!data)
 		return;
 
-	struct block_header *header = (struct block_header *)data - 1;
+	struct block_header *current = (struct block_header *)data - 1;
 
-	if (header->magic != BLOCK_MAGIC)
+	if (current->magic != BLOCK_MAGIC)
 	{
 		fprintf(stderr, "[ERROR]: Invalid pointer or corrupted block\n");
 		abort();
 	}
 
-	if (header->is_free)
+	if (current->is_free)
 	{
 		fprintf(stderr, "[WARN]: Double free detected\n");
 		return;
 	}
 
-	header->is_free = true;
+	current->is_free = true;
 
-	coalesce(header);
+	// update next_free and prev_free
+	current->next_free = findNextFreeBlock(current);
+	current->prev_free = findPrevFreeBlock(current);
+
+	// Update neighbors to point back to current
+	if (current->prev_free)
+		current->prev_free->next_free = current;
+	if (current->next_free)
+		current->next_free->prev_free = current;
+
+	coalesce(current);
 }
 
 void *_calloc(size_t num, size_t size)
@@ -307,4 +351,30 @@ void *_realloc(void *ptr, size_t size)
 	_free(ptr);
 
 	return new_ptr;
+}
+
+struct block_header *findNextFreeBlock(struct block_header *current)
+{
+	if (!current)
+		return NULL;
+
+	// walf forward until finding a free block
+	struct block_header *temp = current->next;
+	while (temp && !temp->is_free)
+		temp = temp->next;
+
+	return temp;
+}
+
+struct block_header *findPrevFreeBlock(struct block_header *current)
+{
+	if (!current)
+		return NULL;
+
+	// walf backward until finding a free block
+	struct block_header *temp = current->prev;
+	while (temp && !temp->is_free)
+		temp = temp->prev;
+
+	return temp;
 }
