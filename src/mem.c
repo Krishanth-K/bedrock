@@ -6,10 +6,6 @@
 #define ALIGNMENT 8
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
 
-// PERF: Now all blocks are in the linked list, not only free ones
-// TODO: handle cases to free pointers in the middle of the array or
-// data section
-
 struct block_header *block_list = NULL;
 struct block_header *free_list = NULL;
 
@@ -268,8 +264,19 @@ void _free(void *data)
 	if (!data)
 		return;
 
+	// 1. alignment check: Pointers from malloc are always aligned.
+	if (((size_t)data & (ALIGNMENT - 1)) != 0)
+	{
+		fprintf(stderr,
+		        "[ERROR]: Unaligned pointer %p passed to free (points to "
+		        "middle of block?)\n",
+		        data);
+		abort();
+	}
+
 	struct block_header *current = (struct block_header *)data - 1;
 
+	// 2. magic number check: The header magic must match.
 	if (current->magic != BLOCK_MAGIC)
 	{
 		fprintf(stderr, "[ERROR]: Invalid pointer or corrupted block\n");
@@ -291,7 +298,6 @@ void _free(void *data)
 	coalesce(current);
 }
 
-// ... Keep _calloc and _realloc as is, they just use _malloc/_free ...
 void *_calloc(size_t num, size_t size)
 {
 	size_t total = num * size;

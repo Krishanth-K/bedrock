@@ -10,8 +10,6 @@
 #define ALIGNMENT 8
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
 
-// PERF: Now all blocks are in the linked list, not only free ones
-
 extern const int MIN_HEADER_SIZE;
 extern const size_t BLOCK_MAGIC;
 extern const size_t ALIGNED_BLOCK_SIZE;

@@ -44,7 +44,7 @@
 - [x] Test buffer overflow detection (if you add red zones)
 
 
-- [ ] have another free_list with only freeblocks
+- [x] have another free_list with only freeblocks
 
 
 - [ ] Add actual benchmarks - Compare malloc/free speed against glibc for 10M ops

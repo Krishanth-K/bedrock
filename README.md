@@ -47,7 +47,6 @@ This project is under active development. The following architectural enhancemen
 - [ ] **Optimized Reallocation:** In-place shrinking for `realloc` to avoid unnecessary data copying.
 
 ### 3. Reliability & Testing
-- [x] **Regression Testing:** Reproduction scripts for infinite loops and edge cases.
 - [ ] **Advanced Test Harness:** Automated detection for memory leaks, buffer overflows, and boundary violations.
 - [ ] **Fuzz Testing:** Stress testing the allocator with randomized allocation patterns to ensure stability under load.
 
