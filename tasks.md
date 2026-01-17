@@ -58,27 +58,26 @@
     - [x] Verify with `test_threads`
 
 
-- [ ] Implement size classes - Buckets for 16/32/64/128/256 bytes minimum
-- [ ] Return pages to OS - munmap when large blocks are freed
-- [ ] Write real tests - Memory leak detection, double-free catching, boundary testing
+### **Phase 5: Performance & Memory Optimization**
+- [ ] Implement size classes (Segregated Free Lists)
+    - [ ] Create array of free lists for small sizes (16, 32, 64, 128, 256, 512, 1024)
+    - [ ] Update `_malloc` to pick from specific bucket
+    - [ ] Update `_free` to return to specific bucket
+    - [ ] Benchmark impact
+- [ ] Return pages to OS
+    - [ ] Identify when a full page is free
+    - [ ] Use `munmap` to release memory
+    - [ ] Verify using system tools (e.g. `htop` or `ps`)
 
-
-
-### **Phase 5: Documentation & Cleanup**
+### **Phase 6: Documentation & Cleanup**
 - [ ] Remove all TODO comments
 - [ ] Add function documentation comments
 - [ ] Clean up debug print statements
 - [ ] Write README explaining your allocator
 - [ ] Document known limitations
 
-### **Optional: Advanced Features (If you want to go further)**
-- [ ] Add heap statistics tracking
-  - [ ] Total bytes allocated
-  - [ ] Peak memory usage
-  - [ ] Number of allocations
-  - [ ] Fragmentation metrics
-- [ ] Implement segregated free lists for common sizes
-- [ ] Add thread safety with mutexes
+### **Optional: Advanced Features**
+- [ ] Add heap statistics tracking (bytes allocated, peak usage, fragmentation)
 - [ ] Implement large allocation optimization (direct mmap for >128KB)
 - [ ] Add red zones for buffer overflow detection
 - [ ] Create visualization tool to show heap state
