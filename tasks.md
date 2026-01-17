@@ -49,7 +49,9 @@
 
 - [ ] Add actual benchmarks - Compare malloc/free speed against glibc for 10M ops
 - [ ] Measure fragmentation - Track (total_allocated / total_pages) over time
-- [ ] Fix realloc - Actually implement shrinking properly
+- [x] Fix realloc - Actually implement shrinking properly
+
+
 - [ ] Add thread safety - Even a single mutex would be better than nothing
 - [ ] Implement size classes - Buckets for 16/32/64/128/256 bytes minimum
 - [ ] Return pages to OS - munmap when large blocks are freed

@@ -102,6 +102,7 @@ void initHeap(void)
 	addToFreeList(header);
 }
 
+// NOTE: requires the current block to be in the free_list
 void coalesce(struct block_header *current)
 {
 	// MERGE WITH NEXT
@@ -351,7 +352,39 @@ void *_realloc(void *ptr, size_t size)
 
 	// if current block is big enough, return it
 	if (current_size > size)
+	{
+		// Should we split?
+		size_t remaining = current_size - size;
+		if (remaining >= ALIGNED_BLOCK_SIZE + MIN_HEADER_SIZE)
+		{
+			// 1. Calculate split point
+			void *data_start = (void *)(block + 1);
+			struct block_header *new_block =
+			    (struct block_header *)((char *)data_start + size);
+
+			// 2. Setup new block header
+			new_block->magic = BLOCK_MAGIC;
+			new_block->is_free = true;
+			new_block->size = remaining - ALIGNED_BLOCK_SIZE;
+
+			// 3. Update physical links
+			new_block->next = block->next;
+			block->next = new_block;
+
+			new_block->prev = block;
+			if (new_block->next)
+				new_block->next->prev = new_block;
+
+			// 4. Update current block size
+			block->size = size;
+
+			// 5. Add new block to free list and coalesce
+			addToFreeList(new_block);
+			coalesce(new_block);
+		}
+
 		return ptr;
+	}
 
 	// allocate the space and verify if it worked
 	void *new_ptr = _malloc(size);
