@@ -27,17 +27,15 @@ typedef struct block_header
 
 } block_header;
 
-extern const size_t ALIGNED_BLOCK_SIZE;
-
 // create a new page and initialize a header and return it
-struct block_header *getHeap();
+struct block_header *getHeap(size_t size);
 
-void initHeap();
-void expandHeap();
+void initHeap(void);
+void expandHeap(size_t min_size);
 
 void coalesce(struct block_header *current);
 
-void validate_list();
+void validate_list(void);
 
 void *_malloc(size_t length);
 void _free(void *data);

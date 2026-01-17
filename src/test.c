@@ -1,5 +1,5 @@
 #include "test.h"
-#include "main.h"
+#include "mem.h"
 
 void verify_pointer(void *ptr, size_t size, char pattern)
 {

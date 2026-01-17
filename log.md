@@ -103,3 +103,12 @@ FIX: create pages adjacent to the current page.
 - Fixed the segfault while adding a new page
 - Abstracted the files
 - Added cmake to build and run the files
+
+---
+
+## Day 6 - 2026-01-17
+
+New ideas new ideas.
+Instead of creating new pages and hoping they would be adjacent. im going to allocate huge spaces, and then
+create and link them
+

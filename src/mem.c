@@ -1,5 +1,5 @@
-#include "main.h"
-#include "test.h"
+#include "mem.h"
+#include <stddef.h>
 
 #define ALIGNMENT 8
 #define ALIGN(size) (((size) + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1))
@@ -16,11 +16,17 @@ const size_t BLOCK_MAGIC = 0xDEADBEEF;
 const size_t ALIGNED_BLOCK_SIZE = ALIGN(sizeof(struct block_header));
 
 // create a new page and initialize a header and return it
-struct block_header *getHeap(void)
+struct block_header *getHeap(size_t size)
 {
 	size_t page_size = sysconf(_SC_PAGESIZE);
-	void *start = mmap(NULL, page_size, PROT_WRITE | PROT_READ,
+
+	size_t required = size + ALIGNED_BLOCK_SIZE;
+	int num_pages = (required + page_size - 1) / page_size;
+	size_t total_size = num_pages * page_size;
+
+	void *start = mmap(NULL, total_size, PROT_WRITE | PROT_READ,
 	                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	printf("DEBUG: mmap returned %p\n", start);
 
 	if (start == MAP_FAILED)
 	{
@@ -30,7 +36,7 @@ struct block_header *getHeap(void)
 
 	struct block_header *header = (struct block_header *)start;
 
-	header->size = page_size - ALIGNED_BLOCK_SIZE;
+	header->size = total_size - ALIGNED_BLOCK_SIZE;
 	header->is_free = true;
 	header->magic = BLOCK_MAGIC;
 
@@ -42,7 +48,8 @@ struct block_header *getHeap(void)
 
 void initHeap(void)
 {
-	struct block_header *header = getHeap();
+	size_t page_size = sysconf(_SC_PAGESIZE);
+	struct block_header *header = getHeap(page_size);
 	free_list = header;
 }
 
@@ -113,21 +120,21 @@ void validate_list(void)
 	printf("List validated: %d blocks\n\n", count);
 }
 
-void expandHeap(void)
+void expandHeap(size_t min_size)
 {
-	struct block_header *new_page_block = getHeap();
-
 	// find the last block in the free list
 	struct block_header *current = free_list;
 
 	if (!free_list)
 	{
-		free_list = new_page_block;
+		free_list = getHeap(min_size);
 		return;
 	}
 
 	while (current->next)
 		current = current->next;
+
+	struct block_header *new_page_block = getHeap(min_size);
 
 	// attach the last block with the new page block
 	current->next = new_page_block;
@@ -137,7 +144,7 @@ void expandHeap(void)
 	if (current->is_free)
 		coalesce(current);
 
-	/* validate_list(); */
+	validate_list();
 }
 
 void *_malloc(size_t length)
@@ -196,7 +203,7 @@ void *_malloc(size_t length)
 	// if no space in current page, create a new page and then allocate
 	if (!current)
 	{
-		expandHeap();
+		expandHeap(length);
 		return _malloc(length);
 	}
 
@@ -312,7 +319,7 @@ int main(int argc, char *argv[])
 	printf("ALIGNED_BLOCK_SIZE = %zu\n", ALIGNED_BLOCK_SIZE);
 
 	// stress_test();
-	_malloc(5000);
+	_malloc(1024 * 1024 + 1);
 
 	return EXIT_SUCCESS;
 }
